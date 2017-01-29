@@ -38,9 +38,12 @@ function preload() {
 }
 
 var platforms;
+var player;
+var cursors;
 
 function create() {
 	game.physics.startSystem(Phaser.Physics.ARCADE);
+	cursors = game.input.keyboard.createCursorKeys();
 
 	game.add.sprite(0,0, 'sky');
 
@@ -55,9 +58,47 @@ function create() {
 	ledge.body.immovable = true;
 	ledge = platforms.create(-150, 250, 'ground');
 	ledge.body.immovable = true;
+
+  player = game.add.sprite(32, game.world.height - 150, 'dude');
+  game.physics.arcade.enable(player);
+
+  player.body.bounce.y = 0.2;
+  player.body.gravity.y = 300;
+  player.body.collideWorldBounds = true;
+
+  player.animations.add('left', [0, 1, 2, 3], 10, true);
+  player.animations.add('right', [5, 6, 7, 8], 10, true);
 }
 
 function update() {
+  var hitPlatform = game.physics.arcade.collide(player, platforms);
+
+	player.body.velocity.x = 0;
+
+	if(cursors.left.isDown) {
+		player.body.velocity.x = -150;
+		if(hitPlatform) {
+			player.animations.play('left');
+		} else {
+			player.animations.stop();
+			player.frame = 3;
+		}
+	} else if(cursors.right.isDown) {
+		player.body.velocity.x = 150;
+		if(hitPlatform) {
+			player.animations.play('right');
+		} else {
+			player.animations.stop();
+			player.frame = 6;
+		}
+	} else {
+		player.animations.stop();
+		player.frame = 4;
+	}
+
+	if(cursors.up.isDown && player.body.touching.down && hitPlatform) {
+		player.body.velocity.y = -350;
+	}
 }
 
 var mooCow = "moo";
