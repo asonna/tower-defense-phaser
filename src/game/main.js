@@ -6,6 +6,7 @@ function preload() {
 	game.load.image('ground', '../assets/platform.png');
 	game.load.image('star', '../assets/star.png');
 	game.load.spritesheet('dude', '../assets/dude.png', 32, 48);
+	game.load.spritesheet('baddie', '../assets/baddie.png', 32, 32);
 
 }
 
@@ -15,6 +16,8 @@ var cursors;
 var stars;
 var score = 0;
 var scoreText;
+var enemies;
+var tests;
 
 function create() {
 
@@ -56,17 +59,65 @@ function create() {
   player.animations.add('left', [0, 1, 2, 3], 10, true);
   player.animations.add('right', [5, 6, 7, 8], 10, true);
 
+	enemies = game.add.group();
+
+	for(var i = 0; i < 3; i++) {
+		var enemy = game.add.sprite(500 + i * 50, game.world.height - 150, 'baddie');
+		game.physics.arcade.enable(enemy);
+		enemy.body.bounce.y = 0.2;
+		enemy.body.gravity.y = 300;
+		enemy.body.collideWorldBounds = true;
+		// enemy.body.onWorldBounds = new Phaser.Signal();
+		// enemy.body.onWorldBounds.add(moo, this);
+		enemy.frame = 1;
+
+		enemy.animations.add('left', [0, 1], 10, true);
+	  enemy.animations.add('right', [2, 3], 10, true);
+
+		enemies.add(enemy);
+	};
+
+	tests = game.add.group();
+
+	for(var i = 0; i < 3; i++) {
+		var enemy = tests.create(500 + i * 50, game.world.height - 300, 'baddie');
+		game.physics.arcade.enable(enemy);
+		enemy.body.bounce.y = 0.2;
+		enemy.body.gravity.y = 300;
+		enemy.body.collideWorldBounds = true;
+		enemy.frame = 1;
+	};
+
+
 	scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 }
 
 function update() {
   var hitPlatform = game.physics.arcade.collide(player, platforms);
 	game.physics.arcade.collide(stars, platforms);
+	game.physics.arcade.collide(enemies, platforms);
 
 	game.physics.arcade.overlap(player, stars, collectStar, null, this);
 
 	player.body.velocity.x = 0;
 
-	movement(hitPlatform);
+	enemies.setAll('body.velocity.x', -100);
+	enemies.callAll('animations.play', 'animations', 'left');
 
+	// enemies.forEachExists(function(enemy) {
+	// 	if(enemy.body.onWall()) {
+	// 		console.log("on wall");
+	// 		enemy.body.velocity.x = 100;
+	// 	} else {
+	// 		enemy.body.velocity.x = 50;
+	// 	}
+	// });
+
+	movement(hitPlatform);
 }
+
+// function moo(sprite, up, down, left, right) {
+// 	if(left) {
+// 		console.log("poo");
+// 	}
+// }
