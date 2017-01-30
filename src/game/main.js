@@ -1,123 +1,105 @@
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-
-function preload() {
-
-	game.load.image('sky', '../assets/sky.png');
-	game.load.image('ground', '../assets/platform.png');
-	game.load.image('star', '../assets/star.png');
-	game.load.spritesheet('dude', '../assets/dude.png', 32, 48);
-	game.load.spritesheet('baddie', '../assets/baddie.png', 32, 32);
-
-}
-
-var platforms;
-var player;
-var cursors;
-var stars;
-var score = 0;
-var scoreText;
-var enemies;
-var tests;
-
-function create() {
-
-	game.physics.startSystem(Phaser.Physics.ARCADE);
-	cursors = game.input.keyboard.createCursorKeys();
-
-	game.add.sprite(0,0, 'sky');
-
-	platforms = game.add.group();
-	platforms.enableBody = true;
-
-	stars = game.add.group();
-	stars.enableBody = true;
-
-	for(var i = 0; i < 12; i++) {
-		var star = stars.create(i * 70, 0, 'star');
-
-		star.body.gravity.y = 6;
-
-		star.body.bounce.y = 0.7 + Math.random() * 0.2;
-	}
-
-	var ground = platforms.create(0, game.world.height - 64, 'ground');
-	ground.scale.setTo(2, 2);
-	ground.body.immovable = true;
-
-	var ledge = platforms.create(400, 400, 'ground');
-	ledge.body.immovable = true;
-	ledge = platforms.create(-150, 250, 'ground');
-	ledge.body.immovable = true;
-
-  player = game.add.sprite(32, game.world.height - 150, 'dude');
-  game.physics.arcade.enable(player);
-
-  player.body.bounce.y = 0.2;
-  player.body.gravity.y = 300;
-  player.body.collideWorldBounds = true;
-
-  player.animations.add('left', [0, 1, 2, 3], 10, true);
-  player.animations.add('right', [5, 6, 7, 8], 10, true);
-
-	enemies = game.add.group();
-
-	for(var i = 0; i < 3; i++) {
-		var enemy = game.add.sprite(500 + i * 50, game.world.height - 150, 'baddie');
-		game.physics.arcade.enable(enemy);
-		enemy.body.bounce.y = 0.2;
-		enemy.body.gravity.y = 300;
-		enemy.body.collideWorldBounds = true;
-		// enemy.body.onWorldBounds = new Phaser.Signal();
-		// enemy.body.onWorldBounds.add(moo, this);
-		enemy.frame = 1;
-
-		enemy.animations.add('left', [0, 1], 10, true);
-	  enemy.animations.add('right', [2, 3], 10, true);
-
-		enemies.add(enemy);
-	};
-
-	tests = game.add.group();
-
-	for(var i = 0; i < 3; i++) {
-		var enemy = tests.create(500 + i * 50, game.world.height - 300, 'baddie');
-		game.physics.arcade.enable(enemy);
-		enemy.body.bounce.y = 0.2;
-		enemy.body.gravity.y = 300;
-		enemy.body.collideWorldBounds = true;
-		enemy.frame = 1;
-	};
+// This example uses the Phaser 2.2.2 framework
 
 
-	scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
-}
+var GameState = function(game) {
+};
 
-function update() {
-  var hitPlatform = game.physics.arcade.collide(player, platforms);
-	game.physics.arcade.collide(stars, platforms);
-	game.physics.arcade.collide(enemies, platforms);
+// Load images and sounds
+GameState.prototype.preload = function() {
+    this.game.load.image('bullet', '/assets/bullet.png');
+		this.game.load.image('arrow', '/assets/arrow.png');
+		this.game.load.image('star', '/assets/star.png');
+};
 
-	game.physics.arcade.overlap(player, stars, collectStar, null, this);
+// Setup the example
+GameState.prototype.create = function() {
+    // Set stage background color
+    this.game.stage.backgroundColor = 0x4488cc;
 
-	player.body.velocity.x = 0;
+    // Define constants
+    this.SHOT_DELAY = 1000; // milliseconds (10 bullets/second)
+    this.BULLET_SPEED = 500; // pixels/second
+    this.NUMBER_OF_BULLETS = 20;
 
-	enemies.setAll('body.velocity.x', -100);
-	enemies.callAll('animations.play', 'animations', 'left');
+    // Create an object representing our tower
+    this.gun = this.game.add.sprite(50, this.game.height/2, 'arrow');
+		// Create an object representing our runner
+		this.runner = this.game.add.sprite(600, 300, this.game.height/2, 'star');
 
-	// enemies.forEachExists(function(enemy) {
-	// 	if(enemy.body.onWall()) {
-	// 		console.log("on wall");
-	// 		enemy.body.velocity.x = 100;
-	// 	} else {
-	// 		enemy.body.velocity.x = 50;
-	// 	}
-	// });
 
-	movement(hitPlatform);
-}
+    // Set the pivot point to the center of the gun
+    this.gun.anchor.setTo(0.5, 0.5);
 
-// function moo(sprite, up, down, left, right) {
-// 	if(left) {
-// 		console.log("poo");
-// 	}
-// }
+    // Create an object pool of dudes
+    this.bulletPool = this.game.add.group();
+    for(var i = 0; i < this.NUMBER_OF_BULLETS; i++) {
+        // Create each bullet and add it to the group.
+        var bullet = this.game.add.sprite(0, 0, 'bullet');
+        this.bulletPool.add(bullet);
+
+        // Set its pivot point to the center of the bullet
+        bullet.anchor.setTo(0.5, 0.5);
+
+        // Enable physics on the bullet
+        this.game.physics.enable(bullet, Phaser.Physics.ARCADE);
+
+        // Set its initial state to "dead".
+        bullet.kill();
+    }
+
+    // Simulate a pointer click/tap input at the center of the stage
+    // when the example begins running.
+    this.game.input.runner.x = this.game.width/2;
+    this.game.input.runner.y = this.game.height/2;
+};
+
+GameState.prototype.shootBullet = function() {
+    // Enforce a short delay between shots by recording
+    // the time that each bullet is shot and testing if
+    // the amount of time since the last shot is more than
+    // the required delay.
+    if (this.lastBulletShotAt === undefined) this.lastBulletShotAt = 0;
+    if (this.game.time.now - this.lastBulletShotAt < this.SHOT_DELAY) return;
+    this.lastBulletShotAt = this.game.time.now;
+
+    // Get a dead bullet from the pool
+    var bullet = this.bulletPool.getFirstDead();
+
+    // If there aren't any bullets available then don't shoot
+    if (bullet === null || bullet === undefined) return;
+
+    // Revive the bullet
+    // This makes the bullet "alive"
+    bullet.revive();
+
+    // Bullets should kill themselves when they leave the world.
+    // Phaser takes care of this for me by setting this flag
+    // but you can do it yourself by killing the bullet if
+    // its x,y coordinates are outside of the world.
+    bullet.checkWorldBounds = true;
+    bullet.outOfBoundsKill = true;
+
+    // Set the bullet position to the gun position.
+    bullet.reset(this.gun.x, this.gun.y);
+    bullet.rotation = this.gun.rotation;
+
+    // Shoot it in the right direction
+    bullet.body.velocity.x = Math.cos(bullet.rotation) * this.BULLET_SPEED;
+    bullet.body.velocity.y = Math.sin(bullet.rotation) * this.BULLET_SPEED;
+};
+
+// The update() method is called every frame
+GameState.prototype.update = function() {
+    // Aim the gun at the pointer.
+    // All this function does is calculate the angle using
+    // Math.atan2(yPointer-yGun, xPointer-xGun)
+    this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runner);
+
+    // Shoot a bullet
+    if (this.game.input) {
+        this.shootBullet();
+    }
+};
+
+var game = new Phaser.Game(848, 450, Phaser.AUTO, 'game');
+game.state.add('game', GameState, true);
