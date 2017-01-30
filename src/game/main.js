@@ -9,6 +9,7 @@ GameState.prototype.preload = function() {
     this.game.load.image('bullet', '/assets/bullet.png');
 		this.game.load.image('arrow', '/assets/arrow.png');
 		this.game.load.image('star', '/assets/star.png');
+
 };
 
 // Setup the example
@@ -22,9 +23,10 @@ GameState.prototype.create = function() {
     this.NUMBER_OF_BULLETS = 20;
 
     // Create an object representing our tower
+																	// x         y               image
     this.gun = this.game.add.sprite(50, this.game.height/2, 'arrow');
 		// Create an object representing our runner
-		this.runner = this.game.add.sprite(600, 300, this.game.height/2, 'star');
+		this.runner = this.game.add.sprite(600, 300, 'star');
 
 
     // Set the pivot point to the center of the gun
@@ -91,8 +93,6 @@ GameState.prototype.shootBullet = function() {
 // The update() method is called every frame
 GameState.prototype.update = function() {
     // Aim the gun at the pointer.
-    // All this function does is calculate the angle using
-    // Math.atan2(yPointer-yGun, xPointer-xGun)
     this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runner);
 
     // Shoot a bullet
