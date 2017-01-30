@@ -59,9 +59,11 @@ GameState.prototype.create = function() {
 
     // Create an object representing our tower
 																	// x         y               image
-    this.gun = this.game.add.sprite(50, this.game.height/2, 'arrow');
+    this.gun = this.game.add.sprite(50, 300, 'arrow');
 		// Create an object representing our runner
-		this.runner = this.game.add.sprite(600, 300, 'star');
+		this.runner = this.game.add.sprite(600, 100, 'star');
+
+
 
 
     // Set the pivot point to the center of the gun
@@ -84,10 +86,6 @@ GameState.prototype.create = function() {
         bullet.kill();
     }
 
-    // Simulate a pointer click/tap input at the center of the stage
-    // when the example begins running.
-    this.game.input.runner.x = this.game.width/2;
-    this.game.input.runner.y = this.game.height/2;
 };
 
 GameState.prototype.shootBullet = function() {
@@ -130,10 +128,19 @@ GameState.prototype.update = function() {
     // Aim the gun at the pointer.
     this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runner);
 
-    // Shoot a bullet
-    if (this.game.input) {
-        this.shootBullet();
-    }
+		var holdDistance = this.game.physics.arcade.distanceBetween(this.gun, this.runner);
+		console.log(holdDistance);
+
+
+
+	    // Shoot a bullet
+	    if (this.game) {
+	        this.shootBullet();
+	    }
+
+
+
+
 };
 
 var game = new Phaser.Game(848, 450, Phaser.AUTO, 'game');
