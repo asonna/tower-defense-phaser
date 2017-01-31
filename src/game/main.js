@@ -9,7 +9,7 @@ GameState.prototype.preload = function() {
     this.game.load.image('bullet', '/assets/bullet.png');
 		this.game.load.image('arrow', '/assets/arrow.png');
 		this.game.load.image('runner', '/assets/star.png');
-    this.game.load.spritesheet('explosion', '/assets/baddie.png', 32, 32);
+    this.game.load.spritesheet('explosion', '/assets/ex1.png', 50, 50);
 
 
 };
@@ -25,18 +25,12 @@ GameState.prototype.create = function() {
     this.BULLET_SPEED = 500; // pixels/second
     this.NUMBER_OF_BULLETS = 20;
 
-
-
     // Create an object representing our tower
-																	// x         y               image
+
     this.gun = this.game.add.sprite(50, 300, 'arrow');
-
-
 
     // Create a group for explosions
     this.explosionGroup = this.game.add.group();
-
-
 
     // Set the pivot point to the center of the gun
     this.gun.anchor.setTo(0.5, 0.5);
@@ -196,7 +190,7 @@ GameState.prototype.getExplosion = function(x, y) {
 
         // Add an animation for the explosion that kills the sprite when the
         // animation is complete
-        var animation = explosion.animations.add('boom', [0,1,2,3], 4, false);
+        var animation = explosion.animations.add('boom', [0,1,2,3,4,5,6,7,8,9,10,11,12], 30, false);
         animation.killOnComplete = true;
 
         // Add the explosion sprite to the group
