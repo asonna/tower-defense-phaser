@@ -119,7 +119,7 @@ GameState.prototype.create = function() {
     this.runners.enableBody = true;
 
     for(var i = 0; i < 3;i++) {
-      var runner = this.runners.create(100 + i, game.world.height - 400 + (i * 100), 'runner');
+      var runner = this.runners.create(100 + i * 100, game.world.height - 400 + (i * 100), 'runner');
       // this.game.physics.arcade.enable(runner);
       // this.runners.add(runner);
     }
@@ -175,7 +175,7 @@ GameState.prototype.update = function() {
 
       // Kill the bullet
       bullet.kill();
-      // runner.kill();
+      runner.kill();
       console.log("killing");
   }, null, this);
 
@@ -192,7 +192,7 @@ GameState.prototype.update = function() {
 
         for(i=0; i<tempRunners.length; i++ ) {
 					var distance = this.game.physics.arcade.distanceBetween(this.gun, tempRunners[i]);
-					if (distance<= 200 ) {
+					if (distance<= 600) {
 						withinRadius.push(tempRunners[i]);
 						// console.log("distancebetween: " + distance)
 						this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, withinRadius[0]);
