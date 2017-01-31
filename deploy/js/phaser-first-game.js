@@ -48,6 +48,7 @@ GameState.prototype.preload = function() {
 
 
 };
+    var maxHealth = 10;
 
 // Setup the example
 GameState.prototype.create = function() {
@@ -118,13 +119,19 @@ GameState.prototype.create = function() {
     this.runners = this.game.add.group();
     this.runners.enableBody = true;
 
+    // this.runners.maxHealth = 10;
+    // console.log(maxHealth);
+
+
+
+
     for(var i = 0; i < 3;i++) {
-      var runner = this.runners.create(100 + i * 100, game.world.height - 400 + (i * 100), 'runner');
+      var runner = this.runners.create(100 + i * 100, game.world.height - 400 + (i * 100), 'runner', maxHealth);
       // this.game.physics.arcade.enable(runner);
       // this.runners.add(runner);
+      runner.body.immovable = true;
+      console.log(maxHealth);
     }
-
-
 
 
 };
@@ -138,7 +145,6 @@ GameState.prototype.shootBullet = function() {
     if (this.lastBulletShotAt === undefined) this.lastBulletShotAt = 0;
     if (this.game.time.now - this.lastBulletShotAt < this.SHOT_DELAY) return;
     this.lastBulletShotAt = this.game.time.now;
-
 
 
     // Get a dead bullet from the pool
@@ -171,14 +177,21 @@ GameState.prototype.update = function() {
   // Check if bullets have collided with the ground
   this.game.physics.arcade.collide(this.bulletPool, this.runners, function(bullet, runner) {
       console.log("colliding");
+
       this.getExplosion(bullet.x, bullet.y);
 
       // Kill the bullet
       bullet.kill();
-      runner.kill();
-      console.log("killing");
-  }, null, this);
+      console.log(maxHealth);
+      if (maxHealth > 0) {
+        maxHealth = maxHealth - 5;
+      }else if (maxHealth <= 0){
+        runner.kill();
+        console.log(maxHealth);
+        console.log("killed");
+    }
 
+  }, null, this);
 
 	    // Shoot a bullet at runner inside radius
 	    if (this.game) {
@@ -192,7 +205,7 @@ GameState.prototype.update = function() {
 
         for(i=0; i<tempRunners.length; i++ ) {
 					var distance = this.game.physics.arcade.distanceBetween(this.gun, tempRunners[i]);
-					if (distance<= 600) {
+					if (distance<= 300) {
 						withinRadius.push(tempRunners[i]);
 						// console.log("distancebetween: " + distance)
 						this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, withinRadius[0]);
@@ -204,13 +217,6 @@ GameState.prototype.update = function() {
         // this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runners.getClosestTo(this.gun));
         // this.shootBullet();
 
-
-				// var targetRadius = this.game.physics.arcade.distanceBetween(this.gun, this.withinRadius[0]);
-
-				//
-				// if (targetRadius <= 700 ){
-        // this.shootBullet();
-				// }
 	    }
 };
 
