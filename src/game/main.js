@@ -17,6 +17,8 @@ GameState.prototype.create = function() {
     // Create Group for Explosion
     this.explosionGroup = this.game.add.group();
 
+    this.withinRadius = [];
+
 
     //TOWER OBJECT
     this.SHOT_DELAY = 1000; // milliseconds (10 bullets/second)
@@ -43,12 +45,14 @@ GameState.prototype.create = function() {
     this.runners.enableBody = true;
 
     for(var i = 0; i < 3;i++) {
-      var runner = this.runners.create(100 + i * 100, game.world.height - 400 + (i * 100), 'runner', maxHealth);
+      var runner = this.runners.create(200 + i, game.world.height - 900 + (i * 250), 'runner', maxHealth);
       // this.game.physics.arcade.enable(runner);
       // this.runners.add(runner);
       runner.body.immovable = true;
       console.log(maxHealth);
     }
+
+    this.runners.setAll('body.velocity.y', 100);
 
     //TANK RUNNERS GROUP
     this.runnerTanks = this.game.add.group();
@@ -134,12 +138,24 @@ GameState.prototype.update = function() {
     //TARGET SHOOTING AREA
     for(i=0; i<waveRunners.length; i++ ) {
 			var distance = this.game.physics.arcade.distanceBetween(this.gun, waveRunners[i]);
-			if (distance<= 600) {
-				withinRadius.push(waveRunners[i]);
-				this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, withinRadius[0]);
+			if (distance<= 220) {
+				// withinRadius.push(waveRunners[i]);
+        if(this.withinRadius.indexOf(waveRunners[i]) < 0) {
+          this.withinRadius.push(waveRunners[i]);
+        }
+				this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.withinRadius[0]);
 				this.shootBullet();
 			}
+
 		}
+
+    if(this.withinRadius.length > 0) {
+      var distanceCurrent = this.game.physics.arcade.distanceBetween(this.gun, this.withinRadius[0]);
+      if(distanceCurrent > 220) {
+        this.withinRadius.shift();
+      }
+    }
+    console.log(this.withinRadius.length);
     // // This way works but without distance and probably won't scale.
     // this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runners.getClosestTo(this.gun));
     // this.shootBullet();
