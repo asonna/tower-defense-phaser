@@ -61,7 +61,11 @@ GameState.prototype.create = function() {
 																	// x         y               image
     this.gun = this.game.add.sprite(50, 300, 'arrow');
 		// Create an object representing our runner
-		this.runner = this.game.add.sprite(600, 100, 'star');
+		this.runner = this.game.add.sprite(300, 100, 'star');
+		this.runner = this.game.add.sprite(600, 300, 'star');
+		this.runner = this.game.add.sprite(700, 100, 'star');
+
+
 
 
 
@@ -126,16 +130,36 @@ GameState.prototype.shootBullet = function() {
 // The update() method is called every frame
 GameState.prototype.update = function() {
     // Aim the gun at the pointer.
-    this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runner);
-
-		var holdDistance = this.game.physics.arcade.distanceBetween(this.gun, this.runner);
-		console.log(holdDistance);
 
 
-
-	    // Shoot a bullet
+	    // Shoot a bullet at runner inside radius
 	    if (this.game) {
-	        this.shootBullet();
+
+				var runner0 = this.game.add.sprite(300, 100, 'star');
+				var runner1 = this.game.add.sprite(600, 300, 'star');
+				var runner2 = this.game.add.sprite(700, 100, 'star');
+
+				var runners = [runner0, runner1, runner2];
+				var withinRadius = [];
+
+				for(i=0; i<runners.length; i++ ) {
+					var distance = this.game.physics.arcade.distanceBetween(this.gun, runners[i]);
+					if (distance<= 670 ) {
+						withinRadius.push(runners[i]);
+						// console.log("distancebetween: " + distance)
+						this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, withinRadius[0]);
+						this.shootBullet();
+					}
+
+				}
+
+
+				// var targetRadius = this.game.physics.arcade.distanceBetween(this.gun, this.withinRadius[0]);
+
+				//
+				// if (targetRadius <= 700 ){
+        // this.shootBullet();
+				// }
 	    }
 
 
