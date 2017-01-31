@@ -43,7 +43,9 @@ var GameState = function(game) {
 GameState.prototype.preload = function() {
     this.game.load.image('bullet', '/assets/bullet.png');
 		this.game.load.image('arrow', '/assets/arrow.png');
-		this.game.load.image('star', '/assets/star.png');
+		this.game.load.image('runner', '/assets/star.png');
+    this.game.load.spritesheet('explosion', '/assets/diamond.png', 128, 128);
+
 
 };
 
@@ -57,16 +59,20 @@ GameState.prototype.create = function() {
     this.BULLET_SPEED = 500; // pixels/second
     this.NUMBER_OF_BULLETS = 20;
 
+
+
     // Create an object representing our tower
 																	// x         y               image
     this.gun = this.game.add.sprite(50, 300, 'arrow');
 		// Create an object representing our runner
-		this.runner = this.game.add.sprite(300, 100, 'star');
-		this.runner = this.game.add.sprite(600, 300, 'star');
-		this.runner = this.game.add.sprite(700, 100, 'star');
+		this.runner = this.game.add.sprite(300, 350, 'runner');
+		this.runner = this.game.add.sprite(600, 275, 'runner');
+		this.runner = this.game.add.sprite(700, 100, 'runner');
 
 
 
+    // Create a group for explosions
+    this.explosionGroup = this.game.add.group();
 
 
 
@@ -80,17 +86,32 @@ GameState.prototype.create = function() {
         var bullet = this.game.add.sprite(0, 0, 'bullet');
         this.bulletPool.add(bullet);
 
-        // Set its pivot point to the center of the bullet
+        // Set its pivot point to the center of the bullet origin
         bullet.anchor.setTo(0.5, 0.5);
 
         // Enable physics on the bullet
         this.game.physics.enable(bullet, Phaser.Physics.ARCADE);
+        // this.game.physics.enable(runner, Phaser.Physics.ARCADE);
 
         // Set its initial state to "dead".
         bullet.kill();
     }
 
+    //Runner group on bottom
+    this.runner = this.game.add.group();
+    for(var x = 0; x < this.game.width; x += 200) {
+        // Add the ground blocks, enable physics on each, make them immovable
+        var runner = this.game.add.sprite(x, this.game.height - 32, 'runner');
+        this.game.physics.enable(runner, Phaser.Physics.ARCADE);
+        // runner.body.immovable = true;
+        // runner.body.allowGravity = false;
+        this.runner.add(runner);
+    }
+
+
+
 };
+
 
 GameState.prototype.shootBullet = function() {
     // Enforce a short delay between shots by recording
@@ -101,13 +122,14 @@ GameState.prototype.shootBullet = function() {
     if (this.game.time.now - this.lastBulletShotAt < this.SHOT_DELAY) return;
     this.lastBulletShotAt = this.game.time.now;
 
+
+
     // Get a dead bullet from the pool
     var bullet = this.bulletPool.getFirstDead();
 
     // If there aren't any bullets available then don't shoot
     if (bullet === null || bullet === undefined) return;
 
-    // Revive the bullet
     // This makes the bullet "alive"
     bullet.revive();
 
@@ -129,15 +151,23 @@ GameState.prototype.shootBullet = function() {
 
 // The update() method is called every frame
 GameState.prototype.update = function() {
-    // Aim the gun at the pointer.
+  // Check if bullets have collided with the ground
+  this.game.physics.arcade.collide(this.bulletPool, this.runner, function(bullet, runner) {
+      console.log("working");
+      // this.getExplosion(bullet.x, bullet.y);
+
+      // Kill the bullet
+      bullet.kill();
+      console.log("killing");
+  }, null, this);
 
 
 	    // Shoot a bullet at runner inside radius
 	    if (this.game) {
 
-				var runner0 = this.game.add.sprite(300, 100, 'star');
-				var runner1 = this.game.add.sprite(600, 300, 'star');
-				var runner2 = this.game.add.sprite(700, 100, 'star');
+				var runner0 = this.game.add.sprite(300, 350, 'runner');
+				var runner1 = this.game.add.sprite(600, 275, 'runner');
+				var runner2 = this.game.add.sprite(700, 100, 'runner');
 
 				var runners = [runner0, runner1, runner2];
 				var withinRadius = [];
@@ -161,10 +191,43 @@ GameState.prototype.update = function() {
         // this.shootBullet();
 				// }
 	    }
+};
 
+GameState.prototype.getExplosion = function(x, y) {
+    // Get the first dead explosion from the explosionGroup
+    var explosion = this.explosionGroup.getFirstDead();
 
+    // If there aren't any available, create a new one
+    if (explosion === null) {
+        explosion = this.game.add.sprite(0, 0, 'explosion');
+        explosion.anchor.setTo(0.5, 0.5);
 
+        // Add an animation for the explosion that kills the sprite when the
+        // animation is complete
+        var animation = explosion.animations.add('boom', [0,1,2,3], 60, false);
+        animation.killOnComplete = true;
 
+        // Add the explosion sprite to the group
+        this.explosionGroup.add(explosion);
+    }
+
+    // Revive the explosion (set it's alive property to true)
+    // You can also define a onRevived event handler in your explosion objects
+    // to do stuff when they are revived.
+    explosion.revive();
+
+    // Move the explosion to the given coordinates
+    explosion.x = x;
+    explosion.y = y;
+
+    // Set rotation of the explosion at random for a little variety
+    explosion.angle = this.game.rnd.integerInRange(0, 360);
+
+    // Play the animation
+    explosion.animations.play('boom');
+
+    // Return the explosion itself in case we want to do anything else with it
+    return explosion;
 };
 
 var game = new Phaser.Game(848, 450, Phaser.AUTO, 'game');
