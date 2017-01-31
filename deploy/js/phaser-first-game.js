@@ -44,7 +44,7 @@ GameState.prototype.preload = function() {
     this.game.load.image('bullet', '/assets/bullet.png');
 		this.game.load.image('arrow', '/assets/arrow.png');
 		this.game.load.image('runner', '/assets/star.png');
-    this.game.load.spritesheet('explosion', '/assets/diamond.png', 128, 128);
+    this.game.load.spritesheet('explosion', '/assets/baddie.png', 32, 32);
 
 
 };
@@ -53,6 +53,7 @@ GameState.prototype.preload = function() {
 GameState.prototype.create = function() {
     // Set stage background color
     this.game.stage.backgroundColor = 0x4488cc;
+    game.physics.startSystem(Phaser.Physics.ARCADE);
 
     // Define constants
     this.SHOT_DELAY = 1000; // milliseconds (10 bullets/second)
@@ -64,10 +65,6 @@ GameState.prototype.create = function() {
     // Create an object representing our tower
 																	// x         y               image
     this.gun = this.game.add.sprite(50, 300, 'arrow');
-		// Create an object representing our runner
-		this.runner = this.game.add.sprite(300, 350, 'runner');
-		this.runner = this.game.add.sprite(600, 275, 'runner');
-		this.runner = this.game.add.sprite(700, 100, 'runner');
 
 
 
@@ -97,16 +94,42 @@ GameState.prototype.create = function() {
         bullet.kill();
     }
 
-    //Runner group on bottom
-    this.runner = this.game.add.group();
-    for(var x = 0; x < this.game.width; x += 200) {
-        // Add the ground blocks, enable physics on each, make them immovable
-        var runner = this.game.add.sprite(x, this.game.height - 32, 'runner');
-        this.game.physics.enable(runner, Phaser.Physics.ARCADE);
-        // runner.body.immovable = true;
-        // runner.body.allowGravity = false;
-        this.runner.add(runner);
+    // //Runner group on bottom
+    // this.runner = this.game.add.group();
+    // for(var x = 0; x < this.game.width; x += 200) {
+    //     // Add the ground blocks, enable physics on each, make them immovable
+    //     var runnerGroup = this.game.add.sprite(x, this.game.height - 32, 'runner');
+    //     this.game.physics.enable(runnerGroup, Phaser.Physics.ARCADE);
+    //     // runner.body.immovable = true;
+    //     // runner.body.allowGravity = false;
+    //     this.runner.add(runnerGroup);
+    // }
+
+    // // Create an object representing our runner
+    // this.runner = this.game.add.sprite(300, 350, 'runner');
+    // this.runner = this.game.add.sprite(600, 275, 'runner');
+    // this.runner = this.game.add.sprite(700, 100, 'runner');
+    //
+    // //Runner group on bottom
+    // this.runner = this.game.add.group();
+    // for(var x = 0; x < this.game.width; x += 200) {
+    //     // Add the ground blocks, enable physics on each, make them immovable
+    //     var runnerGroup = this.game.add.sprite(x, this.game.height - 32, 'runner');
+    //     this.game.physics.enable(runnerGroup, Phaser.Physics.ARCADE);
+    //     // runner.body.immovable = true;
+    //     // runner.body.allowGravity = false;
+    //     this.runner.add(runnerGroup);
+    // }
+
+    this.runners = this.game.add.group();
+    this.runners.enableBody = true;
+
+    for(var i = 0; i < 3;i++) {
+      var runner = this.runners.create(100 + i, game.world.height - 400 + (i * 100), 'runner');
+      // this.game.physics.arcade.enable(runner);
+      // this.runners.add(runner);
     }
+
 
 
 
@@ -152,12 +175,13 @@ GameState.prototype.shootBullet = function() {
 // The update() method is called every frame
 GameState.prototype.update = function() {
   // Check if bullets have collided with the ground
-  this.game.physics.arcade.collide(this.bulletPool, this.runner, function(bullet, runner) {
-      console.log("working");
-      // this.getExplosion(bullet.x, bullet.y);
+  this.game.physics.arcade.collide(this.bulletPool, this.runners, function(bullet, runner) {
+      console.log("colliding");
+      this.getExplosion(bullet.x, bullet.y);
 
       // Kill the bullet
       bullet.kill();
+      // runner.kill();
       console.log("killing");
   }, null, this);
 
@@ -165,23 +189,26 @@ GameState.prototype.update = function() {
 	    // Shoot a bullet at runner inside radius
 	    if (this.game) {
 
-				var runner0 = this.game.add.sprite(300, 350, 'runner');
-				var runner1 = this.game.add.sprite(600, 275, 'runner');
-				var runner2 = this.game.add.sprite(700, 100, 'runner');
-
-				var runners = [runner0, runner1, runner2];
 				var withinRadius = [];
 
-				for(i=0; i<runners.length; i++ ) {
-					var distance = this.game.physics.arcade.distanceBetween(this.gun, runners[i]);
-					if (distance<= 670 ) {
-						withinRadius.push(runners[i]);
+        var tempRunners = [];
+        this.runners.forEachExists(function(runner) {
+          tempRunners.push(runner);
+        });
+
+        for(i=0; i<tempRunners.length; i++ ) {
+					var distance = this.game.physics.arcade.distanceBetween(this.gun, tempRunners[i]);
+					if (distance<= 200 ) {
+						withinRadius.push(tempRunners[i]);
 						// console.log("distancebetween: " + distance)
 						this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, withinRadius[0]);
 						this.shootBullet();
 					}
-
 				}
+
+        // // This way works but without distance and probably won't scale.
+        // this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runners.getClosestTo(this.gun));
+        // this.shootBullet();
 
 
 				// var targetRadius = this.game.physics.arcade.distanceBetween(this.gun, this.withinRadius[0]);
@@ -204,7 +231,7 @@ GameState.prototype.getExplosion = function(x, y) {
 
         // Add an animation for the explosion that kills the sprite when the
         // animation is complete
-        var animation = explosion.animations.add('boom', [0,1,2,3], 60, false);
+        var animation = explosion.animations.add('boom', [0,1,2,3], 4, false);
         animation.killOnComplete = true;
 
         // Add the explosion sprite to the group
