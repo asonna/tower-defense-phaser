@@ -9,6 +9,7 @@ GameState.prototype.preload = function() {
     this.game.load.image('bullet', '/assets/bullet.png');
 		this.game.load.image('arrow', '/assets/arrow.png');
 		this.game.load.image('runner', '/assets/star.png');
+    this.game.load.image('runnerTank', '/assets/diamond.png');
     this.game.load.spritesheet('explosion', '/assets/ex1.png', 50, 50);
 
 
@@ -27,7 +28,6 @@ GameState.prototype.create = function() {
     this.NUMBER_OF_BULLETS = 20;
 
     // Create an object representing our tower
-
     this.gun = this.game.add.sprite(50, 300, 'arrow');
 
     // Create a group for explosions
@@ -81,20 +81,28 @@ GameState.prototype.create = function() {
     //     this.runner.add(runnerGroup);
     // }
 
+
+
     this.runners = this.game.add.group();
     this.runners.enableBody = true;
-
-    // this.runners.maxHealth = 10;
-    // console.log(maxHealth);
-
-
-
-
+    // Basic Runners
     for(var i = 0; i < 3;i++) {
       var runner = this.runners.create(100 + i * 100, game.world.height - 400 + (i * 100), 'runner', maxHealth);
       // this.game.physics.arcade.enable(runner);
       // this.runners.add(runner);
       runner.body.immovable = true;
+      console.log(maxHealth);
+    }
+
+
+    this.runnerTanks = this.game.add.group();
+    this.runnerTanks.enableBody = true;
+    // Tank Runners
+    for(var i = 0; i < 3;i++) {
+      var runnerTank = this.runnerTanks.create(300 + i * 100, game.world.height - 400 + (i * 100), 'runnerTank', maxHealth);
+      // this.game.physics.arcade.enable(runner);
+      // this.runners.add(runner);
+      runnerTank.body.immovable = true;
       console.log(maxHealth);
     }
 
@@ -140,6 +148,7 @@ GameState.prototype.shootBullet = function() {
 // The update() method is called every frame
 GameState.prototype.update = function() {
   // Check if bullets have collided with the ground
+
   this.game.physics.arcade.collide(this.bulletPool, this.runners, function(bullet, runner) {
       console.log("colliding");
 
@@ -147,15 +156,33 @@ GameState.prototype.update = function() {
 
       // Kill the bullet
       bullet.kill();
-      console.log(maxHealth);
-      if (maxHealth > 0) {
-        maxHealth = maxHealth - 5;
-      }else if (maxHealth <= 0){
-        runner.kill();
-        console.log(maxHealth);
-        console.log("killed");
-    }
+      console.log(runner.maxHealth);
 
+        if (runner.maxHealth > 0) {
+          runner.maxHealth = runner.maxHealth - 50;
+        } else if (runner.maxHealth <= 0) {
+          runner.kill();
+          console.log("runner: " + runner.maxHealth);
+          console.log();
+        }
+  }, null, this);
+
+
+
+  this.game.physics.arcade.collide(this.bulletPool, this.runnerTanks, function(bullet, runnerTank) {
+      console.log("colliding");
+
+      this.getExplosion(bullet.x, bullet.y);
+
+      // Kill the bullet
+      bullet.kill();
+
+      if (runnerTank.maxHealth > 0) {
+        runnerTank.maxHealth = runnerTank.maxHealth - 25;
+      } else if (runnerTank.maxHealth <= 0){
+        runnerTank.kill();
+        console.log("runnerTank: " + runnerTank.maxHealth);
+      }
   }, null, this);
 
 	    // Shoot a bullet at runner inside radius
@@ -163,20 +190,24 @@ GameState.prototype.update = function() {
 
 				var withinRadius = [];
 
-        var tempRunners = [];
+        var waveRunners = [];
         this.runners.forEachExists(function(runner) {
-          tempRunners.push(runner);
+          waveRunners.push(runner);
+        });
+        this.runnerTanks.forEachExists(function(runnerTank) {
+          waveRunners.push(runnerTank);
         });
 
-        for(i=0; i<tempRunners.length; i++ ) {
-					var distance = this.game.physics.arcade.distanceBetween(this.gun, tempRunners[i]);
-					if (distance<= 300) {
-						withinRadius.push(tempRunners[i]);
+        for(i=0; i<waveRunners.length; i++ ) {
+					var distance = this.game.physics.arcade.distanceBetween(this.gun, waveRunners[i]);
+					if (distance<= 600) {
+						withinRadius.push(waveRunners[i]);
 						// console.log("distancebetween: " + distance)
 						this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, withinRadius[0]);
 						this.shootBullet();
 					}
 				}
+
 
         // // This way works but without distance and probably won't scale.
         // this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runners.getClosestTo(this.gun));
