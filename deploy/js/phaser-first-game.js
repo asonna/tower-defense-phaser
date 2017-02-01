@@ -33,8 +33,7 @@ function collectStar(player, star) {
 	scoreText.text = 'Score: ' + score;
 }
 
-
-//Rocket Launcher Tower
+//MACHINE GUN LAUNCHER TOWER
 var GameState = function(game) {
 };
 GameState.prototype.preload = function() {
@@ -51,14 +50,16 @@ GameState.prototype.create = function() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
     // Create Group for Explosion
     this.explosionGroup = this.game.add.group();
-
+    //KEEP WITHINRADIUS UPDATED
     this.withinRadius = [];
-
-
-    //TOWER OBJECT
-    this.SHOT_DELAY = 1000; // milliseconds (10 bullets/second)
-    this.BULLET_SPEED = 750; // pixels/second
+    this.targetRadius = 500;
+    this.SHOT_DELAY = 100; // milliseconds (10 bullets/second)
+    this.BULLET_SPEED = 850; // pixels/second
     this.NUMBER_OF_BULLETS = 20;
+    this.runnerDmg = 5;
+    this.runnerTankDmg = 2;
+
+
     // Create Gun
     this.gun = this.game.add.sprite(50, 300, 'arrow');
     // Set the pivot point to the center of the gun
@@ -99,7 +100,6 @@ GameState.prototype.create = function() {
       runnerTank.body.immovable = true;
       console.log(maxHealth);
     }
-
 };
 
 //BULLET SHOOT
@@ -139,8 +139,12 @@ GameState.prototype.update = function() {
       this.getExplosion(bullet.x, bullet.y);
       bullet.kill();
         if (runner.maxHealth > 0) {
-          runner.maxHealth = runner.maxHealth - 50;
+          runner.maxHealth = runner.maxHealth - this.runnerDmg;
         } else if (runner.maxHealth <= 0) {
+          var index = this.withinRadius.indexOf(runner)
+          if(index >= 0) {
+            this.withinRadius.splice(index, 1);
+          }
           runner.kill();
           console.log("runner: " + runner.maxHealth);
         }
@@ -151,9 +155,13 @@ GameState.prototype.update = function() {
       this.getExplosion(bullet.x, bullet.y);
       bullet.kill();
       if (runnerTank.maxHealth > 0) {
-        runnerTank.maxHealth = runnerTank.maxHealth - 25;
+        runnerTank.maxHealth = runnerTank.maxHealth - this.runnerTankDmg;
       } else if (runnerTank.maxHealth <= 0){
         runnerTank.kill();
+        var index = this.withinRadius.indexOf(runnerTank)
+        if(index >= 0) {
+          this.withinRadius.splice(index, 1);
+        }
         console.log("runnerTank: " + runnerTank.maxHealth);
       }
   }, null, this);
@@ -173,7 +181,9 @@ GameState.prototype.update = function() {
     //TARGET SHOOTING AREA
     for(i=0; i<waveRunners.length; i++ ) {
 			var distance = this.game.physics.arcade.distanceBetween(this.gun, waveRunners[i]);
-			if (distance<= 220) {
+      console.log(i);
+      console.log(waveRunners[i]);
+			if (distance<= this.targetRadius) {
 				// withinRadius.push(waveRunners[i]);
         if(this.withinRadius.indexOf(waveRunners[i]) < 0) {
           this.withinRadius.push(waveRunners[i]);
@@ -181,16 +191,14 @@ GameState.prototype.update = function() {
 				this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.withinRadius[0]);
 				this.shootBullet();
 			}
-
 		}
-
     if(this.withinRadius.length > 0) {
       var distanceCurrent = this.game.physics.arcade.distanceBetween(this.gun, this.withinRadius[0]);
-      if(distanceCurrent > 220) {
+      if(distanceCurrent > this.targetRadius) {
         this.withinRadius.shift();
       }
     }
-    console.log(this.withinRadius.length);
+    console.log("Targets in radius: " + this.withinRadius.length);
     // // This way works but without distance and probably won't scale.
     // this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runners.getClosestTo(this.gun));
     // this.shootBullet();
