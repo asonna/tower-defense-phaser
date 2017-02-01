@@ -33,14 +33,14 @@ function collectStar(player, star) {
 	scoreText.text = 'Score: ' + score;
 }
 
-//MACHINE GUN LAUNCHER TOWER
+//MACHINE GUN TOWER
 var GameState = function(game) {
 };
 GameState.prototype.preload = function() {
     this.game.load.image('bullet', '/assets/bullet.png');
-		this.game.load.image('arrow', '/assets/arrow.png');
-		this.game.load.image('runner', '/assets/star.png');
-    this.game.load.image('runnerTank', '/assets/diamond.png');
+		this.game.load.image('arrow', '/assets/cannon.png');
+		this.game.load.image('runner', '/assets/runnerBasic.png');
+    this.game.load.image('runnerTank', '/assets/runnerTank.png');
     this.game.load.spritesheet('explosion', '/assets/ex1.png', 50, 50);
 };
     var maxHealth = null;
@@ -61,7 +61,7 @@ GameState.prototype.create = function() {
 
 
     // Create Gun
-    this.gun = this.game.add.sprite(50, 300, 'arrow');
+    this.gun = this.game.add.sprite(40, 400, 'arrow');
     // Set the pivot point to the center of the gun
     this.gun.anchor.setTo(0.5, 0.5);
 
