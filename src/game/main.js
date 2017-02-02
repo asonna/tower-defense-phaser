@@ -2,27 +2,39 @@
 var GameState = function(game) {
 };
 GameState.prototype.preload = function() {
-    this.game.load.image('bullet', '/assets/bullet.png');
-		this.game.load.image('arrow', '/assets/cannon.png');
+    this.game.load.image('bullet', '/assets/rocket.png');
+		this.game.load.image('arrow', '/assets/rocketlauncher.png');
 		this.game.load.image('runner', '/assets/runnerBasic.png');
     this.game.load.image('runnerTank', '/assets/runnerTank.png');
     this.game.load.spritesheet('explosion', '/assets/ex1.png', 50, 50);
+    this.game.load.image("background", "/assets/map.jpg");
 };
     var maxHealth = null;
 
 GameState.prototype.create = function() {
     this.game.stage.backgroundColor = 0x4488cc;
+    this.game.add.tileSprite(0, 0, 1334, 750, 'background');
     game.physics.startSystem(Phaser.Physics.ARCADE);
     // Create Group for Explosion
     this.explosionGroup = this.game.add.group();
     //KEEP WITHINRADIUS UPDATED
+
+//Rocket
     this.withinRadius = [];
     this.targetRadius = 500;
-    this.SHOT_DELAY = 100; // milliseconds (10 bullets/second)
-    this.BULLET_SPEED = 850; // pixels/second
+    this.SHOT_DELAY = 800; // milliseconds (10 bullets/second)
+    this.BULLET_SPEED = 200; // pixels/second
     this.NUMBER_OF_BULLETS = 20;
     this.runnerDmg = 5;
     this.runnerTankDmg = 2;
+
+//Machine Gun
+    // this.targetRadius = 500;
+    // this.SHOT_DELAY = 100; // milliseconds (10 bullets/second)
+    // this.BULLET_SPEED = 850; // pixels/second
+    // this.NUMBER_OF_BULLETS = 20;
+    // this.runnerDmg = 5;
+    // this.runnerTankDmg = 2;
 
 
     // Create Gun
@@ -50,7 +62,7 @@ GameState.prototype.create = function() {
       // this.game.physics.arcade.enable(runner);
       // this.runners.add(runner);
       runner.body.immovable = true;
-      console.log(maxHealth);
+      // console.log(maxHealth);
     }
 
     this.runners.setAll('body.velocity.y', 100);
@@ -63,8 +75,14 @@ GameState.prototype.create = function() {
       var runnerTank = this.runnerTanks.create(300 + i * 100, game.world.height - 400 + (i * 100), 'runnerTank', maxHealth);
 
       runnerTank.body.immovable = true;
-      console.log(maxHealth);
+      // console.log(maxHealth);
     }
+
+    // // Create a follower
+    //     this.game.add.existing(
+    //         new Follower(this.game, this.game.width/2, this.game.height/2, this.game.input)
+    //     );
+
 };
 
 //BULLET SHOOT
@@ -91,6 +109,9 @@ GameState.prototype.shootBullet = function() {
     // Set the bullet position to the gun position.
     bullet.reset(this.gun.x, this.gun.y);
     bullet.rotation = this.gun.rotation;
+
+
+
     // Shoot it in the right direction
     bullet.body.velocity.x = Math.cos(bullet.rotation) * this.BULLET_SPEED;
     bullet.body.velocity.y = Math.sin(bullet.rotation) * this.BULLET_SPEED;
@@ -111,7 +132,7 @@ GameState.prototype.update = function() {
             this.withinRadius.splice(index, 1);
           }
           runner.kill();
-          console.log("runner: " + runner.maxHealth);
+          // console.log("runner: " + runner.maxHealth);
         }
   }, null, this);
 
@@ -127,7 +148,7 @@ GameState.prototype.update = function() {
         if(index >= 0) {
           this.withinRadius.splice(index, 1);
         }
-        console.log("runnerTank: " + runnerTank.maxHealth);
+        // console.log("runnerTank: " + runnerTank.maxHealth);
       }
   }, null, this);
 
@@ -146,8 +167,8 @@ GameState.prototype.update = function() {
     //TARGET SHOOTING AREA
     for(i=0; i<waveRunners.length; i++ ) {
 			var distance = this.game.physics.arcade.distanceBetween(this.gun, waveRunners[i]);
-      console.log(i);
-      console.log(waveRunners[i]);
+      // console.log(i);
+      // console.log(waveRunners[i]);
 			if (distance<= this.targetRadius) {
 				// withinRadius.push(waveRunners[i]);
         if(this.withinRadius.indexOf(waveRunners[i]) < 0) {
@@ -155,6 +176,17 @@ GameState.prototype.update = function() {
         }
 				this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.withinRadius[0]);
 				this.shootBullet();
+
+
+        var distance = this.game.math.distance(this.gun, this.gun, this.withinRadius[0]);
+
+        if (distance > this.MIN_DISTANCE) {
+            // Calculate the angle to the target
+            var rotation = this.game.math.angleBetween(this.gun, this.gun, this.withinRadius[0]);
+    }
+
+
+
 			}
 		}
     if(this.withinRadius.length > 0) {
@@ -163,7 +195,7 @@ GameState.prototype.update = function() {
         this.withinRadius.shift();
       }
     }
-    console.log("Targets in radius: " + this.withinRadius.length);
+    // console.log("Targets in radius: " + this.withinRadius.length);
     // // This way works but without distance and probably won't scale.
     // this.gun.rotation = this.game.physics.arcade.angleBetween(this.gun, this.runners.getClosestTo(this.gun));
     // this.shootBullet();
@@ -193,5 +225,5 @@ GameState.prototype.getExplosion = function(x, y) {
     return explosion;
 };
 
-var game = new Phaser.Game(848, 450, Phaser.AUTO, 'game');
+var game = new Phaser.Game(1334, 750, Phaser.AUTO, 'game');
 game.state.add('game', GameState, true);
